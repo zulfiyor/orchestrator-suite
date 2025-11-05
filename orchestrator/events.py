@@ -1,33 +1,35 @@
 # Program: Orchestrator Event Models
-# Version: 0.1.0
+# Version: 0.2.0
 # Author: Dr. Zulfiyor Bakhtiyorov
 # Affiliations: University of Cambridge; Xinjiang Institute of Ecology and Geography; National Academy of Sciences of Tajikistan
 # Year: 2025
 # License: MIT License
 
-"""Pydantic models for status and control events."""
+"""Lightweight dataclasses for status and control events."""
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import datetime
 from typing import Literal, Optional, Tuple
 
-from pydantic import BaseModel
 
-
-class CaptureRequest(BaseModel):
+@dataclass(slots=True)
+class CaptureRequest:
     path: str
     autofocus: bool = True
-    region: Optional[Tuple[int, int, int, int]] = None  # x, y, w, h
+    region: Optional[Tuple[int, int, int, int]] = None
 
 
-class CaptureResponse(BaseModel):
+@dataclass(slots=True)
+class CaptureResponse:
     ok: bool
     filepath: Optional[str] = None
     error: Optional[str] = None
 
 
-class StatusEvent(BaseModel):
+@dataclass(slots=True)
+class StatusEvent:
     ts: datetime
     source: Literal["printer", "camera", "planner", "orchestrator"]
     level: Literal["info", "warn", "error"]

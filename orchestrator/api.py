@@ -1,65 +1,88 @@
-# Program: Orchestrator API (FastAPI)
-# Version: 0.1.0
+# Program: Direct Orchestrator Runtime
+# Version: 0.2.0
 # Author: Dr. Zulfiyor Bakhtiyorov
 # Affiliations: University of Cambridge; Xinjiang Institute of Ecology and Geography; National Academy of Sciences of Tajikistan
 # Year: 2025
 # License: MIT License
 
-"""FastAPI glue-service that coordinates printer, planner, and camera."""
+"""Direct in-process orchestration without intermediate microservices."""
 
 from __future__ import annotations
 
-import asyncio
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import Callable, Optional, Union
 
-from fastapi import FastAPI
-
-from .clients import CameraClient, PlannerClient, PrinterClient
-from .config import AppConfig
+from .clients import CameraModule, PlannerModule, PrinterModule, PrintJobResult
+from .config import AppConfig, load_config
 
 
-def create_app(cfg: AppConfig, cam_url: str, prn_url: str, pln_url: str) -> FastAPI:
-    app = FastAPI(title="Orchestrator")
+class Orchestrator:
+    """Coordinate printer, planner, and camera inside a single runtime."""
 
-    camera = CameraClient(cam_url)
-    printer = PrinterClient(prn_url)
-    planner = PlannerClient(pln_url)
+    def __init__(
+        self,
+        config: AppConfig,
+        *,
+        camera: Optional[CameraModule] = None,
+        planner: Optional[PlannerModule] = None,
+        printer: Optional[PrinterModule] = None,
+        sleep_fn: Optional[Callable[[float], None]] = None,
+    ) -> None:
+        self.config = config
+        self.camera = camera or CameraModule(save_dir=config.save_dir)
+        self.planner = planner or PlannerModule(save_dir=config.save_dir)
+        sleep_callable = sleep_fn or (lambda _: None)
+        self.printer = printer or PrinterModule(
+            camera=self.camera,
+            planner=self.planner,
+            stabilization_sleep=sleep_callable,
+            max_retries=config.max_retries,
+            stabilization_ms=config.stabilization_ms,
+            save_dir=config.save_dir,
+        )
+        self.set_save_dir(config.save_dir)
 
-    @app.post("/prep/camera")
-    async def prep_camera() -> dict[str, object]:
-        camera.prepare()
-        camera.set_save_dir(str(cfg.save_dir))
-        return {"ok": True}
+    def set_save_dir(self, path: Path) -> Path:
+        resolved = path.resolve()
+        self.camera.set_save_dir(resolved)
+        self.planner.set_save_dir(resolved)
+        self.printer.set_save_dir(resolved)
+        return resolved
 
-    @app.post("/sync/save_dir")
-    async def sync_save_dir(path: Optional[str] = None) -> dict[str, str | bool]:
-        save_dir = Path(path) if path else cfg.save_dir
-        printer.set_save_dir(str(save_dir))
-        camera.set_save_dir(str(save_dir))
-        planner.set_save_dir(str(save_dir))
-        return {"ok": True, "save_dir": str(save_dir)}
+    def prep_camera(self) -> None:
+        self.camera.prepare()
 
-    @app.post("/run/capture_once")
-    async def capture_once(region: Optional[Tuple[int, int, int, int]] = None) -> dict[str, object]:
-        await asyncio.sleep(cfg.stabilization_ms / 1000.0)
-        resp = camera.capture(path=str(cfg.save_dir), region=region)
-        return resp
+    def keep_camera_alive(self) -> None:
+        self.camera.keepalive()
 
-    @app.post("/run/sequence")
-    async def coordinated_sequence(
+    def start_from_printer(
+        self,
+        *,
         steps: int,
-        region: Optional[Tuple[int, int, int, int]] = None,
-    ) -> dict[str, object]:
-        results = []
-        printer.start()
-        for _ in range(steps):
-            await asyncio.sleep(cfg.stabilization_ms / 1000.0)
-            res = camera.capture(path=str(cfg.save_dir), region=region)
-            results.append(res)
-        return {"ok": all(r.get("ok", False) for r in results), "frames": results}
+        region: Optional[tuple[int, int, int, int]] = None,
+    ) -> PrintJobResult:
+        return self.printer.start(steps=steps, region=region)
 
-    return app
+    def start_from_planner(
+        self,
+        *,
+        steps: int,
+        region: Optional[tuple[int, int, int, int]] = None,
+    ) -> PrintJobResult:
+        return self.start_from_printer(steps=steps, region=region)
+
+
+def create_default_orchestrator(config_path: Optional[Union[Path, str]] = None) -> Orchestrator:
+    """Helper to create an orchestrator by loading YAML configuration."""
+
+    cfg_path: Optional[Path]
+    if config_path is None:
+        cfg_path = None
+    else:
+        cfg_path = Path(config_path).expanduser().resolve()
+    cfg = load_config(cfg_path) if cfg_path is not None else AppConfig(save_dir=Path("./captures").resolve())
+    orchestrator = Orchestrator(config=cfg)
+    return orchestrator
 
 
 # Created by Dr. Z. Bakhtiyorov

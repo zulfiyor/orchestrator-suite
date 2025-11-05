@@ -22,10 +22,6 @@ dev = [
   "pytest==8.3.3",
   "deep-translator==1.11.4",
   "types-PyYAML",
-  "fastapi==0.112.1",
-  "requests==2.32.3",
-  "pydantic==2.8.2",
-  "uvicorn==0.30.5",
 ]
 
 [tool.black]
