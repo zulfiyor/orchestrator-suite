@@ -1,0 +1,48 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "orchestrator-suite"
+version = "0.1.0"
+description = "Orchestrator for Printer, Disc-Planner, and Camera with FastAPI IPC, retries, keep-alive"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [
+  { name = "Dr. Zulfiyor Bakhtiyorov" },
+]
+keywords = ["python", "orchestration", "ipc", "fastapi", "printer", "camera", "planner"]
+
+[project.optional-dependencies]
+dev = [
+  "black==24.10.0",
+  "ruff==0.6.9",
+  "mypy==1.11.2",
+  "pytest==8.3.3",
+  "requests>=2.31",
+  "fastapi>=0.115",
+  "pydantic>=2",
+  "uvicorn>=0.30",
+  "PyYAML==6.0.2",
+  "deep-translator==1.11.4",
+  "types-PyYAML",
+]
+
+[tool.black]
+line-length = 88
+target-version = ["py310", "py311", "py312"]
+
+[tool.isort]
+profile = "black"
+
+[tool.ruff]
+line-length = 88
+lint.select = ["E", "F", "I", "UP", "B", "SIM", "PL", "N", "D"]
+lint.ignore = ["D203", "D213", "D100", "D104"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.pytest.ini_options]
+addopts = "-q"
