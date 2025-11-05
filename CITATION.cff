@@ -1,0 +1,12 @@
+cff-version: 1.2.0
+title: "<your-package-name>"
+authors:
+  - family-names: Bakhtiyorov
+    given-names: Zulfiyor
+    name-particle: ""
+    affiliation: "University of Cambridge; Xinjiang Institute of Ecology and Geography; National Academy of Sciences of Tajikistan"
+    orcid: ""
+version: "0.1.0"
+license: MIT
+message: "If you use this software, please cite it as below."
+doi: ""
