@@ -1,0 +1,48 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "<your-package-name>"
+version = "0.1.0"
+description = "<One-line description>"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [
+  { name = "Dr. Zulfiyor Bakhtiyorov" },
+]
+keywords = ["python", "standardization", "ci", "lint"]
+
+[project.optional-dependencies]
+dev = [
+  "black==24.10.0",
+  "ruff==0.6.9",
+  "mypy==1.11.2",
+  "pytest==8.3.3",
+  "deep-translator==1.11.4",
+  "types-PyYAML",
+  "fastapi==0.112.1",
+  "requests==2.32.3",
+  "pydantic==2.8.2",
+  "uvicorn==0.30.5",
+]
+
+[tool.black]
+line-length = 88
+target-version = ["py310", "py311", "py312"]
+
+[tool.isort]
+profile = "black"
+
+[tool.ruff]
+line-length = 88
+lint.select = ["E", "F", "I", "UP", "B", "SIM", "PL", "N", "D"]
+lint.ignore = ["D203", "D213", "D100", "D104"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.pytest.ini_options]
+addopts = "-q"
+testpaths = ["tests"]
