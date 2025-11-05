@@ -1,0 +1,12 @@
+cff-version: 1.2.0
+title: "Capturing Disk: Planner and Printer Integration"
+authors:
+  - family-names: Bakhtiyorov
+    given-names: Zulfiyor
+    orcid: "https://orcid.org/0000-0001-7658-6536"
+version: "0.1.0"
+license: MIT
+date-released: 2025-10-31
+doi: ""
+repository-code: "https://github.com/your-org/capturing-disk"
+message: "If you use this software, please cite it as below."

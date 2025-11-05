@@ -1,0 +1,9 @@
+line-length = 88
+select = ["E", "F", "I", "UP", "B", "SIM", "PL", "N", "D"]
+ignore = ["D203", "D213", "D100", "D104"]
+
+[per-file-ignores]
+"edsdk_runtime.py" = ["D205", "E501", "F821", "PLR0912", "PLR0915", "SIM102", "SIM105"]
+"gen_edsdk_from_headers.py" = ["D103", "PLR2004"]
+"tools/inject_headers.py" = ["D103"]
+"tools/translate_repo.py" = ["D101", "PLR2004", "SIM102"]

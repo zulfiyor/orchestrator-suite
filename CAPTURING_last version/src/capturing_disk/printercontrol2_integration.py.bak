@@ -1,0 +1,56 @@
+# Program: Capturing Disk — printercontrol2 integration helpers
+# Version: 0.1.0
+# Author: Dr. Zulfiyor Bakhtiyorov
+# Institutions: University of Cambridge; Xinjiang Institute of Ecology and Geography; National Academy of Sciences of Tajikistan
+# Year: 2025
+# License: MIT License
+
+from __future__ import annotations
+
+import subprocess
+import sys
+from pathlib import Path
+from typing import Optional
+
+from .adapters.gcode_adapter import emit_gcode
+
+
+def launch_planner_subprocess(image_path: str, out_json: str | None = None) -> str:
+    """Launch GUI planner in a subprocess and return the generated plan path.
+
+    Args:
+        image_path: Path to disk top-view image.
+        out_json: Optional explicit output path.
+
+    Returns:
+        Path to the JSON plan produced by the planner.
+    """
+
+    if out_json is None:
+        out_json = str(Path("out/plan.json").absolute())
+
+    cmd = [
+        sys.executable,
+        "-m",
+        "capturing_disk.gui_planner",
+        "--image",
+        image_path,
+        "--out-json",
+        out_json,
+    ]
+    subprocess.run(cmd, check=True)
+    return out_json
+
+
+def plan_to_gcode(plan_json_path: str) -> str:
+    """Convert a plan JSON to G-code string for immediate sending."""
+
+    return emit_gcode(plan=None, plan_json_path=plan_json_path)
+
+
+# Example usage inside your printercontrol2.py:
+# plan_path = launch_planner_subprocess(image_path)
+# gcode = plan_to_gcode(plan_path)
+# send_to_printer(gcode)
+
+# Created by Dr. Z. Bakhtiyorov

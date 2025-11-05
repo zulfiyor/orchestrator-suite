@@ -1,0 +1,79 @@
+# Capturing Disk: Planner ↔ Printer Integration
+
+Готовый к публикации Python-проект для интеграции скрипта планирования съёмки дисков (`disk_planner_xy.py`) с контроллером принтера (`printercontrol2.py`).
+
+## Цели
+- Выбрать изображение диска в контроллере → открыть GUI планировщика.
+- В GUI задать параметры диска/сканирования и автоматически очертить границы (HoughCircles).
+- Сгенерировать маршрут и команды (G-code или «legacy»-формат) → передать в принтер.
+
+## Установка
+```bash
+python -m venv .venv
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
+python -m pip install -U pip
+pip install -r requirements.txt
+```
+
+## Быстрый старт
+
+```bash
+# Запуск GUI планировщика напрямую
+python -m capturing_disk.gui_planner --image path/to/disk_top_view.jpg
+
+# CLI: спланировать и сохранить JSON-план и G-code
+python -m capturing_disk.cli plan \
+  --image path/to/disk.jpg \
+  --out-json out/plan.json \
+  --out-gcode out/plan.gcode \
+  --pattern raster --step-mm 0.5 --dwell-ms 250
+
+# Интеграция с вашим printercontrol2.py
+# (см. файл src/capturing_disk/printercontrol2_integration.py)
+```
+
+## Контракт обмена (Planner → Printer)
+
+Формат **plan.json** (упрощённо):
+
+```json
+{
+  "disk": {"outer_mm": 120.0, "inner_mm": 15.0, "center_xy_mm": [0.0, 0.0], "pixel_size_mm": 0.05},
+  "scan": {"pattern": "raster", "step_mm": 0.5, "dwell_ms": 250, "feed_mm_min": 1200.0},
+  "path": [
+    {"type": "move", "x": 10.0, "y": 5.0},
+    {"type": "dwell", "ms": 250},
+    {"type": "trigger", "mode": "camera"}
+  ]
+}
+```
+
+Далее адаптер переводит в **G-code** (Marlin/GRBL) либо в «legacy»-CSV.
+
+## Интеграция «как есть» (вы держите скрипты раздельно)
+
+* В `printercontrol2.py` при выборе диска вызывайте GUI планировщика:
+
+  ```python
+  from capturing_disk.printercontrol2_integration import launch_planner_subprocess
+  plan_path = launch_planner_subprocess(image_path)
+  # затем преобразуем в команды под ваш принтер
+  from capturing_disk.adapters.gcode_adapter import emit_gcode
+  gcode = emit_gcode(plan_json_path=plan_path)
+  # отправьте gcode в ваш драйвер/порт
+  ```
+* Если хотите объединить — импортируйте функции из `capturing_disk.disk_planner_xy` напрямую и показывайте диалог параметров.
+
+## Конфигурации и стиль
+
+* Black (line-length 88), Ruff, isort, mypy (basic strictness).
+* MIT License.
+
+## How to cite
+
+См. `CITATION.cff`.
+
+## Лицензия
+
+MIT — см. `LICENSE`.
+
